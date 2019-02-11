@@ -1,0 +1,350 @@
+
+################################################################################
+LICENSE
+################################################################################
+
+```
+Fast Downward is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+Fast Downward is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
+```
+
+
+
+
+
+
+################################################################################
+General
+################################################################################
+
+Implementation is based on a fresh fast downward version from August 2015:
+http://www.fast-downward.org
+
+Thanks to all contributors of the original fast-downward version!
+
+PPDDL Translator script is taken from Prob-PRP:
+https://bitbucket.org/haz/planner-for-relevant-policies/wiki/Prob-PRP
+
+Thanks to Christian Muise for providing us the translator!
+
+NOTE: The supported feature set of the translator is very limited. For
+example, reward based problems are not supported!
+
+
+
+################################################################################
+Usage of Probabilistic Fast-Downward
+################################################################################
+
+Compiling and running works similar to the regular fast downward version. To
+compile everything, run ./build_all in the src directory. To just compile the
+search component, run make in src/search.
+
+NOTE: Compiling the search component takes some while. The size of the resulting
+executable is about 130MB.
+
+To run fast downward, we suggest to use the provided run script
+(src/fast-downward.py).
+
+
+
+################################################################################
+Fast Downward Run Script: src/fast-downward.py
+################################################################################
+
+src/fast-downward.py --help
+
+usage: fast-downward.py [-h] [--show-aliases] [--run-all] [--translate]
+                        [--preprocess] [--search]
+                        [--translate-time-limit TRANSLATE_TIME_LIMIT]
+                        [--translate-memory-limit TRANSLATE_MEMORY_LIMIT]
+                        [--preprocess-time-limit PREPROCESS_TIME_LIMIT]
+                        [--preprocess-memory-limit PREPROCESS_MEMORY_LIMIT]
+                        [--search-time-limit SEARCH_TIME_LIMIT]
+                        [--search-memory-limit SEARCH_MEMORY_LIMIT]
+                        [--overall-time-limit OVERALL_TIME_LIMIT]
+                        [--overall-memory-limit OVERALL_MEMORY_LIMIT]
+                        [--alias ALIAS] [--debug]
+                        [--log-level {debug,info,warning}] [--plan-file FILE]
+                        [--portfolio FILE]
+                        INPUT_FILE1 [INPUT_FILE2] [COMPONENT_OPTION ...]
+
+Fast Downward driver script.
+
+Input files can be either a PDDL problem file (with an optional PDDL domain
+file), in which case the driver runs all three planner components,  or a SAS+
+preprocessor output file, in which case the driver runs just the search
+component. This default behaviour can be overridden with the options below.
+
+Arguments given before the specified input files are interpreted by the driver
+script ("driver options"). Arguments given after the input files are passed on
+to the planner components ("component options"). In exceptional cases where no
+input files are needed, use "--" to separate driver from component options. In
+even more exceptional cases where input files begin with "--", use "--" to
+separate driver options from input files and also to separate input files from
+component options.
+
+By default, component options are passed to the search component. Use
+"--translate-options", "--preprocess-options" or "--search-options" within the
+component options to override the default for the following options, until
+overridden again. (See below for examples.)
+
+positional arguments:
+  planner_args          file names and options passed on to planner components
+
+driver options that show information and exit (don't run planner):
+  -h, --help            show this help message and exit
+  --show-aliases        show the known aliases (see --alias) and exit
+
+driver options selecting the planner components to be run
+(may select several; default: auto-select based on input file(s)):
+  --run-all             run all components of the planner
+  --translate           run translator component
+  --preprocess          run preprocessor component
+  --search              run search component
+
+time and memory limits:
+  You can limit the time or memory for individual components
+  or the whole planner. The effective limit for each component is the minimum
+  of the component, overall, external soft, and external hard limits.
+
+  Limits are given in seconds or MiB. You can change the unit by using the
+  suffixes s, m, h and K, M, G.
+
+  By default, all limits are inactive. Only external limits (e.g. set with
+  ulimit) are respected.
+
+  Portfolios require that a time limit is in effect. Portfolio configurations
+  that exceed their time or memory limit are aborted, and the next
+  configuration is run.
+
+  --translate-time-limit TRANSLATE_TIME_LIMIT
+  --translate-memory-limit TRANSLATE_MEMORY_LIMIT
+  --preprocess-time-limit PREPROCESS_TIME_LIMIT
+  --preprocess-memory-limit PREPROCESS_MEMORY_LIMIT
+  --search-time-limit SEARCH_TIME_LIMIT
+  --search-memory-limit SEARCH_MEMORY_LIMIT
+  --overall-time-limit OVERALL_TIME_LIMIT
+  --overall-memory-limit OVERALL_MEMORY_LIMIT
+
+other driver options:
+  --alias ALIAS         run a config with an alias (e.g. seq-sat-lama-2011)
+  --debug               use debug mode for search component
+  --log-level {debug,info,warning}
+                        set log level (most verbose: debug; least verbose:
+                        warning; default: info)
+  --plan-file FILE      write plan(s) to FILE (default: sas_plan; anytime
+                        configurations append .1, .2, ...)
+  --portfolio FILE      run a portfolio specified in FILE
+
+component options:
+  --translate-options OPTION1 OPTION2 ...
+  --preprocess-options OPTION1 OPTION2 ...
+  --search-options OPTION1 OPTION2 ...
+                        pass OPTION1 OPTION2 ... to specified planner component
+                        (default: pass component options to search)
+
+Examples:
+
+Translate and preprocess, then find a plan with A* + LM-Cut:
+./fast-downward.py ../benchmarks/gripper/prob01.pddl --search "astar(lmcut())"
+
+Translate and preprocess, run no search:
+./fast-downward.py --translate --preprocess ../benchmarks/gripper/prob01.pddl
+
+Run predefined configuration (LAMA-2011) on preprocessed task:
+./fast-downward.py --alias seq-sat-lama-2011 output
+
+Run the search component in debug mode (with assertions enabled):
+./fast-downward.py --debug output --search "astar(ipdb())"
+
+Pass options to translator and search components:
+./fast-downward.py ../benchmarks/gripper/prob01.pddl --translate-options --relaxed --search-options --search "astar(lmcut())"
+
+
+
+################################################################################
+Fast Downward Run Script: Aliases
+################################################################################
+
+The following aliases are provided: (which can be used by the --alias ALIAS option)
+
+---- Valid for GSSP Problems
+
+-- VI using no dead end pruning, h^{max} dead end pruning, and M&S bisimulation
+dead end pruning with size limits N=100k and N=infinity:
+vi
+vi-hmax
+vi-ms100k
+vi-msinf
+
+-- FRET-V^U and LRTDP to find fix-points, using no dead end pruning, h^{max}
+dead end pruning, and M&S bisimulation dead end pruning with size limits N=100k
+and N=infinity:
+fretv-lrtdp
+fretv-lrtdp-hmax
+fretv-lrtdp-ms100k
+fretv-lrtdp-msinf
+
+-- FRET-\pi^U and LRTDP to find fix-points, using no dead end pruning, h^{max}
+dead end pruning, and M&S bisimulation dead end pruning with size limits N=100k
+and N=infinity:
+fretpi-lrtdp
+fretpi-lrtdp-hmax
+fretpi-lrtdp-ms100k
+fretpi-lrtdp-msinf
+
+
+---- Valid for SSP Problems
+
+-- LRTDP, using no dead end pruning, h^{LM-cut} dead end pruning, and M&S
+bisimulation dead end pruning with size limits N=100k and N=infinity:
+lrtdp
+lrtdp-lmcut
+lrtdp-ms100k
+lrtdp-msinf
+
+-- HDP, using no dead end pruning, h^{LM-cut} dead end pruning, and M&S
+bisimulation dead end pruning with size limits N=100k and N=infinity:
+hdp
+hdp-lmcut
+hdp-ms100k
+hdp-msinf
+
+-- Improved LAO*, using no dead end pruning, h^{LM-cut} dead end pruning, and
+M&S bisimulation dead end pruning with size limits N=100k and N=infinity:
+ilao
+ilao-lmcut
+ilao-ms100k
+ilao-msinf
+
+
+---- Valid for Problems with Acyclic State Spaces
+
+-- Specific version of VI that runs only on acyclic state spaces, again without
+dead end pruning, h^{LM-cut} dead end pruning, and M&S bisimulation dead end
+pruning with size limits N=100k and N=infinity:
+acyclic-vi
+acyclic-vi-lmcut
+acyclic-vi-ms100k
+acyclic-vi-msinf
+
+-- AO* without dead end pruning, h^{LM-cut} dead end pruning, and M&S
+bisimulation dead end pruning with size limits N=100k and N=infinity:
+ao
+ao-lmcut
+ao-ms100k
+ao-msinf
+
+-- AO*|_L (exhaustive state space search) without dead end pruning, h^{LM-cut}
+dead end pruning, and M&S bisimulation dead end pruning with size limits N=100k
+and N=infinity:
+aol
+aol-lmcut
+aol-ms100k
+aol-msinf
+
+
+
+################################################################################
+Fast Downward Search Component: Options
+################################################################################
+
+--budget N
+N must be an integer or a path to a file that contains an integer. If not set or
+set to -1, budget limit is considered to be infinity. Otherwise, budget is
+bounded by N.
+
+--criterion X
+Where X in {maxprob, expcost}. Sets the optimization criterion to X. Default is
+maxprob.
+
+--giveup N
+Sets the giveup action cost to N. Default value is 10^6. This option has no
+effect if the optimization criterion is maxprob.
+
+--store-policy
+If this option is set, the policy will be extracted and written to a file upon
+termination. NOTE: FRET currently doesn't support the extraction of the policy.
+
+
+
+################################################################################
+Fast Downward Search Component: Probabilistic Search Algorithms
+################################################################################
+
+Currently implemented probabilistic search algorithms: T-VI, A-VI, LRTDP, HDFS,
+AO*, and combinations with FRET.
+	
+-- T-VI, A-VI
+- Parameter: tvi, avi
+- Description:
+Toplogical-ValueIteration and Acyclic-ValueIteration; both first compute a
+toplogical ordering of the state space (T-VI computes a toplogival ordering of
+maximal strongly connected components), and then do value updates along this
+ordering.
+- Specific Options: none
+
+-- LRTDP
+- Parameter: lrtdp
+- Description:
+Implementation of LRTDP
+- Specific Options:
+seed: integer; sets the seed of the random samples
+epsconsist: bool; terminates samples at epsilon consistent states
+oselect: {default, gap, h}; bias of action outcome selection (default) no bias, (gap) towards with larger V^U - V^L gap, (h) towards states with smaller heuristic estimate
+
+-- HDFS
+- Parameter: hdfs
+- Description:
+Framework for various heuristic depth first search algorithms (such as HDP, I-LAO*).
+- Specific Options:
+labeling: bool; should states be labeled solved?
+fw_updates: bool; should value updates be performed while expanding the greedy policy?
+bw_updates: bool; should value updates be performed in reverse order of expansions?
+inconsistent: bool; should the expansion of the greedy policy be terminated at epsilon inconsistent states?
+terminate_trial: bool; should the expansion of the greedy policy be stopped when finding an epsilon inconsistent state?
+vi: bool; should value iteration be performed on the greedy policy graph after it has been fully explored and the policy did not change?
+
+-- AO*
+- Parameter: ao
+- Description:
+AO* implementation.  with support of exhaustive state space search (instead of
+search on greedy policy graph).
+-- Specific Options:
+oselect: {aribtrary, maxp, preferred, gap, minh}; outcome selection in greedy policy graph expansion
+
+-- AO*|L
+- Parameter: aol
+- Description:
+Exhaustive state space search.
+- Specific Options:
+tiplist: {lifo, fifo}; determines expansion order, LIFO -> Depth First Search, FIFO -> Breadth First Search
+
+-- FRET
+- Parameter: fret
+- Description:
+Implementation of FRET.
+- Specific Options:
+local: bool; if set, then FRET will only eliminate traps within one greedy policy graph at a time, instead of eliminating traps in the V^U graph (the graph that contains all greedy policy graphs)
+engine: {lrtdp, hdfs}, Find-and-Revise scheme to be used to find fix-points
+delta: float; determines the tollerated error of the actions to be considered part of the V^U graph computation
+
+
+Addionally, all algorithms have the option
+epsilon: float
+state_space: {factored, mas}; state space on which the search algorithms are ran. mas is the bisimulation of the state space, factored is the regular state space with possible dead end pruning. For more details, consider the examples given in src/driver/aliases.py
+
+and, all non-exhaustive search algorithms have to option
+tiebreaking: {arbitrary, minh, maxgap}; selecting out of all greedy actions the action according to (arbitrary) no particular criterion, (minh) minimal expected heuristic value, (maxgap) action that leads to a state with maximal V_U-V_L gap
+
+

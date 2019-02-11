@@ -1,0 +1,6 @@
+(define (problem canadian-transport-l8-e12-t1-p4--minP200--maxP200--s852565)
+(:domain canadian-transport-l8-e12-t1-p4--minP200--maxP200--s852565)
+(:init (at l5) (p-at p0 l6) (p-at p1 l5) (p-at p2 l6) (p-at p3 l2) (road-status r0 unknown) (road-status r1 unknown) (road-status r2 unknown) (road-status r3 unknown) (road-status r4 unknown) (road-status r5 unknown) (road-status r6 unknown) (road-status r7 unknown) (road-status r8 unknown) (road-status r9 unknown) (road-status r10 unknown) (road-status r11 unknown))
+(:goal (and (p-at p0 l2) (p-at p1 l7) (p-at p2 l2) (p-at p3 l3)))
+(:metric minimize (total-cost))
+)
